@@ -22,15 +22,15 @@ int get_random_number(int max_number)
  * database.
  */
 Node* get_node_from_database(MarkovChain *markov_chain, char *data_ptr){
-    // make sure the linked list is not empty
-    if(markov_chain->database->first == NULL){
-        return NULL;
-    }
     Node* currentNode = markov_chain->database->first;
-    while(currentNode != NULL && !strcmp(markov_chain->database->first->data->data, data_ptr)){
+    // if the list is empty this should just skip the loop and return NULL
+    while(currentNode != NULL) {
+        if (strcmp(currentNode->data->data, data_ptr) == 0) {
+            return currentNode;
+        }
         currentNode = currentNode->next;
     }
-    return currentNode;
+    return NULL;
 }
 
 
@@ -54,7 +54,7 @@ Node* add_to_database(MarkovChain *markov_chain, char *data_ptr){
     if(newMarkovNode == NULL){
         return NULL;
     }
-    newMarkovNode->data = data_ptr; // TODO assuming we don't need to do strdupe
+    newMarkovNode->data = data_ptr; // TODO assuming we don't need to do strdupe (I Really think we do since when we read from the file we overwrite the buffer and that's the memory we are pointing to) (DON'T FORGET TO FREE THE MEMORY AFTER)
 
     // try to add a new node but detect if failed
     if(add(markov_chain->database, newMarkovNode) == 1){
@@ -185,6 +185,7 @@ void free_frequency_list(MarkovNodeFrequency* frequency_list){
  * @param markov_chain
  * @return the random MarkovNode
  */
+// TODO we need to test that we are not meeting a NULL node at any point
 MarkovNode* get_first_random_node(MarkovChain *markov_chain){
     // grab a random number between 1 and linked list size (including)
     int element_number = get_random_number(markov_chain->database->size) + 1;
@@ -193,6 +194,16 @@ MarkovNode* get_first_random_node(MarkovChain *markov_chain){
     // traverse random number of nodes
     for (int i = 1; i <= element_number; ++i, current_node = current_node->next);
     // return the markovNode inside the markov_chain
+    char* current_word = current_node->data->data;
+
+    // TODO make sure this test is supposed to be done here and this is the way to do it
+    // if the first node we found ends with a dot we need to find a new one
+    while (current_word[strlen(current_word) - 1] == '.'){
+        element_number = get_random_number(markov_chain->database->size) + 1;
+        current_node = markov_chain->database->first;
+        for (int i = 1; i <= element_number; ++i, current_node = current_node->next);
+        current_word = current_node->data->data;
+    }
     return current_node->data;
 }
 
@@ -221,6 +232,7 @@ MarkovNode* get_next_random_node(MarkovNode *cur_markov_node){
 
     // grab and return the node with the accumulation of the random number
     accumulated_frequency = 0;
+    current_frequency = cur_markov_node->frequency_list;
     while(current_frequency != NULL){
         accumulated_frequency += current_frequency->frequency;
         if(random_number < accumulated_frequency)
@@ -232,17 +244,16 @@ MarkovNode* get_next_random_node(MarkovNode *cur_markov_node){
     return NULL;
 }
 
+// TODO the teacher wrote in the comments we got that it gets a markov chain to me it looks like this function gets the node we generated using get_first_random_node
 /**
  * Receive markov_chain, generate and print random sentence out of it. The
- * sentence must have at least 2 words in it.
+ * sentence must have at least 2 words in it. {this means that we must call get_first_random_node and pass the return of that to this function}
  * @param first_node markov_node to start with
  * @param  max_length maximum length of chain to generate
  */
- // TODO what does it mean that the sentence must have at least 2 words in it?
- //  does that mean that I return an error if I was given a node that ends with a dot?
- //  michael in the name of Nadav says that I deal with this when I call the function
 void generate_tweet(MarkovNode *first_node, int max_length){
      MarkovNode* current_node = first_node;
+     // TODO need to handle get_next_random_node returning NULL here
      for (int i = 0; i < max_length; ++i, current_node = get_next_random_node(current_node)) {
          if(current_node->data[strlen(current_node->data)-1] == '.'){
              printf("%s", current_node->data);
