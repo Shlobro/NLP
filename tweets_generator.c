@@ -12,13 +12,7 @@
 
 #define DELIMITERS " \n\t\r"
 
-/**
- * this function is just cause I'm lazy and I didn't want to type printf every time
- *
- * @param error_message
- * @return
- */
-int error(char error_message[]);
+
 
 /**
  * fills the database (the markovChain) with words from a given file
@@ -93,17 +87,13 @@ int main(int argc, char *argv[]){
 }
 
 
-int error(char error_message[]){
-    printf("%s", error_message);
-    return EXIT_FAILURE;
-}
+
 
 int fill_database(FILE *fp, int words_to_read, MarkovChain* markovChain){
     int words_read = 0;
     // buffer to store each line (the size is 1000 since we assume the line will not be more than that)
     char buffer[1000];
 
-    //TODO make sure that we can assume that every single line has at least 2 words in it!!!! (Nadav claims this is the case)
 
     // line reading loop
     while(fgets(buffer, sizeof(buffer), fp) != NULL && words_read <= words_to_read){

@@ -121,4 +121,12 @@ void generate_tweet(MarkovNode *first_node, int max_length);
  */
 int get_random_number(int max_number);
 
+
+/**
+ * this function is just cause I'm lazy and I didn't want to type printf every time
+ *
+ * @param error_message
+ * @return
+ */
+int error(char error_message[]);
 #endif /* _MARKOV_CHAIN_H_ */

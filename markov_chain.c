@@ -52,12 +52,20 @@ Node* add_to_database(MarkovChain *markov_chain, char *data_ptr){
     // create the new markov node with the data
     MarkovNode* newMarkovNode = (MarkovNode*) malloc(sizeof(MarkovNode));
     if(newMarkovNode == NULL){
+        error(ALLOCATION_ERROR_MASSAGE);
         return NULL;
     }
-    newMarkovNode->data = data_ptr; // TODO assuming we don't need to do strdupe (I Really think we do since when we read from the file we overwrite the buffer and that's the memory we are pointing to) (DON'T FORGET TO FREE THE MEMORY AFTER)
+
+    // copy over the data into the node
+    newMarkovNode->data = strdup(data_ptr);
+    if(newMarkovNode->data == NULL){
+        error(ALLOCATION_ERROR_MASSAGE);
+        return NULL;
+    }
 
     // try to add a new node but detect if failed
     if(add(markov_chain->database, newMarkovNode) == 1){
+        error(ALLOCATION_ERROR_MASSAGE);
         free(newMarkovNode); // since the node failed we now have to free the markov node
         return NULL;
     }
@@ -80,6 +88,7 @@ int add_node_to_frequency_list(MarkovNode *first_node, MarkovNode *second_node){
     if(first_node->frequency_list == NULL){
         first_node->frequency_list = (MarkovNodeFrequency*) malloc(sizeof (MarkovNodeFrequency));
         if(first_node->frequency_list == NULL){
+            error(ALLOCATION_ERROR_MASSAGE);
             return 1;
         }
         first_node->frequency_list->markov_node = second_node;
@@ -244,16 +253,16 @@ MarkovNode* get_next_random_node(MarkovNode *cur_markov_node){
     return NULL;
 }
 
-// TODO the teacher wrote in the comments we got that it gets a markov chain to me it looks like this function gets the node we generated using get_first_random_node
 /**
- * Receive markov_chain, generate and print random sentence out of it. The
+ * Receive first node of markov_chain, generate and print random sentence out of it. The
  * sentence must have at least 2 words in it. {this means that we must call get_first_random_node and pass the return of that to this function}
  * @param first_node markov_node to start with
  * @param  max_length maximum length of chain to generate
  */
 void generate_tweet(MarkovNode *first_node, int max_length){
      MarkovNode* current_node = first_node;
-     // TODO need to handle get_next_random_node returning NULL here
+     // In theory, I don't need to check if you get_next_random_node returns NULL
+     // since the only case that will happen is if a word has a . at the end and that will be caught in the loop
      for (int i = 0; i < max_length; ++i, current_node = get_next_random_node(current_node)) {
          if(current_node->data[strlen(current_node->data)-1] == '.'){
              printf("%s", current_node->data);
@@ -266,3 +275,7 @@ void generate_tweet(MarkovNode *first_node, int max_length){
      }
 }
 
+int error(char error_message[]){
+    printf("%s", error_message);
+    return EXIT_FAILURE;
+}
