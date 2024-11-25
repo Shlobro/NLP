@@ -115,7 +115,7 @@ int fill_database(FILE *fp, int words_to_read, MarkovChain* markovChain){
 
         // loop will exit as soon as the line runs out
         char* token = strtok(buffer, DELIMITERS);
-        while(token != NULL && words_read <= words_to_read){
+        while(token != NULL && words_read < words_to_read){
             next_node = add_to_database(markovChain, token);
             // check if adding the new node was successful (allocation success check) (success also means it existed)
             if(next_node == NULL){
@@ -127,7 +127,7 @@ int fill_database(FILE *fp, int words_to_read, MarkovChain* markovChain){
             else if(current_node != NULL)
                 add_node_to_frequency_list(current_node->data, next_node->data);
             current_node = next_node;
-            if(token[strlen(token) - 1 != '.']){
+            if(token[strlen(token) - 1] != '.'){
                 skip_frequency_list_stage = 1;
             }
             words_read++;
