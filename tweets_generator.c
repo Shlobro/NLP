@@ -33,6 +33,7 @@ int main(int argc, char *argv[]){
     // convert the seed into a number. no need to check if valid (assumed)
     char* endptr;
     unsigned int seed = (unsigned int) strtol(argv[1], &endptr, 10);
+    srand(seed);
 
     // convert the number of strings into a number. no need to check if valid (assumed)
     int num_of_tweets = (int) strtol(argv[2], &endptr, 10);
@@ -53,7 +54,7 @@ int main(int argc, char *argv[]){
 
     // let's get those words from the file and fill the database
     MarkovChain * markovChain = (MarkovChain*) malloc(sizeof(MarkovChain));
-    if (markovChain == NULL) {;
+    if (markovChain == NULL) {
         return EXIT_FAILURE;
     }
     markovChain->database = (LinkedList*) malloc(sizeof(LinkedList));
@@ -66,14 +67,15 @@ int main(int argc, char *argv[]){
     markovChain->database->size = 0;
 
 
-    if(!fill_database(file, num_of_words_to_read, markovChain)){
-        // TODO free the memory we had a failure somewhere
+    if(fill_database(file, num_of_words_to_read, markovChain) == 1){
+        free_database(&markovChain);
         return EXIT_FAILURE; // TODO ask teacher if this is what im supposed to return
     }
 
     // Print out the tweets
     for (int i = 0; i < num_of_tweets; ++i) {
         MarkovNode * first_markov_node_in_new_tweet = get_first_random_node(markovChain);
+        printf("Tweet %d: ", i + 1);
         generate_tweet(first_markov_node_in_new_tweet, MAX_TWEET_LEN);
     }
 
@@ -117,7 +119,7 @@ int fill_database(FILE *fp, int words_to_read, MarkovChain* markovChain){
             else if(current_node != NULL)
                 add_node_to_frequency_list(current_node->data, next_node->data);
             current_node = next_node;
-            if(token[strlen(token) - 1] != '.'){
+            if(token[strlen(token) - 1] == '.'){
                 skip_frequency_list_stage = 1;
             }
             words_read++;

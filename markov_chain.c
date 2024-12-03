@@ -43,36 +43,43 @@ Node* get_node_from_database(MarkovChain *markov_chain, char *data_ptr){
  * returns NULL in case of memory allocation failure.
  */
 Node* add_to_database(MarkovChain *markov_chain, char *data_ptr){
-    // first let's start by checking if the newLinkedListNode exists in the chain already, if so return it.
-    Node* newLinkedListNode = get_node_from_database(markov_chain, data_ptr);
-    if(newLinkedListNode != NULL){
-        return newLinkedListNode;
+    // Check if the node already exists in the database
+    Node* existingNode = get_node_from_database(markov_chain, data_ptr);
+    if(existingNode != NULL){
+        return existingNode;
     }
 
-    // create the new markov node with the data
+    // Allocate a new MarkovNode
     MarkovNode* newMarkovNode = (MarkovNode*) malloc(sizeof(MarkovNode));
     if(newMarkovNode == NULL){
         error(ALLOCATION_ERROR_MASSAGE);
         return NULL;
     }
 
-    // copy over the data into the node
+    // Initialize the data field
     newMarkovNode->data = strdup(data_ptr);
     if(newMarkovNode->data == NULL){
         error(ALLOCATION_ERROR_MASSAGE);
+        free(newMarkovNode); // Free the allocated MarkovNode
         return NULL;
     }
 
-    // try to add a new node but detect if failed
+    // Initialize the frequency list pointers
+    newMarkovNode->frequency_list = NULL;
+    newMarkovNode->last_frequency_node = NULL;
+
+    // Add the new MarkovNode to the database
     if(add(markov_chain->database, newMarkovNode) == 1){
         error(ALLOCATION_ERROR_MASSAGE);
-        free(newMarkovNode); // since the node failed we now have to free the markov node
+        free(newMarkovNode->data);
+        free(newMarkovNode); // Free the MarkovNode and its data
         return NULL;
     }
 
-    // since the linked list adds at the end we can just return the last node
+    // Return the newly added node
     return markov_chain->database->last;
 }
+
 
 
 /**
@@ -201,16 +208,15 @@ MarkovNode* get_first_random_node(MarkovChain *markov_chain){
     // point at the first node
     Node* current_node = markov_chain->database->first;
     // traverse random number of nodes
-    for (int i = 1; i <= element_number; ++i, current_node = current_node->next);
+    for (int i = 1; i < element_number; ++i, current_node = current_node->next);
     // return the markovNode inside the markov_chain
     char* current_word = current_node->data->data;
 
-    // TODO make sure this test is supposed to be done here and this is the way to do it
     // if the first node we found ends with a dot we need to find a new one
     while (current_word[strlen(current_word) - 1] == '.'){
         element_number = get_random_number(markov_chain->database->size) + 1;
         current_node = markov_chain->database->first;
-        for (int i = 1; i <= element_number; ++i, current_node = current_node->next);
+        for (int i = 1; i < element_number; ++i, current_node = current_node->next);
         current_word = current_node->data->data;
     }
     return current_node->data;
@@ -263,16 +269,17 @@ void generate_tweet(MarkovNode *first_node, int max_length){
      MarkovNode* current_node = first_node;
      // In theory, I don't need to check if you get_next_random_node returns NULL
      // since the only case that will happen is if a word has a . at the end and that will be caught in the loop
-     for (int i = 0; i < max_length; ++i, current_node = get_next_random_node(current_node)) {
+     for (int i = 0; i < max_length-1; ++i, current_node = get_next_random_node(current_node)) {
          if(current_node->data[strlen(current_node->data)-1] == '.'){
-             printf("%s", current_node->data);
-             break;
+             printf("%s\n", current_node->data);
+             return;
          }
          else{
              printf("%s", current_node->data);
              printf(" ");
          }
      }
+    printf("%s\n", current_node->data);
 }
 
 int error(char error_message[]){
