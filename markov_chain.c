@@ -57,7 +57,8 @@ Node* add_to_database(MarkovChain *markov_chain, char *data_ptr){
     }
 
     // Initialize the data field
-    newMarkovNode->data = strdup(data_ptr);
+    newMarkovNode->data = (char*) malloc(strlen(data_ptr) + 1);
+    strcpy(newMarkovNode->data, data_ptr);
     if(newMarkovNode->data == NULL){
         error(ALLOCATION_ERROR_MASSAGE);
         free(newMarkovNode); // Free the allocated MarkovNode
